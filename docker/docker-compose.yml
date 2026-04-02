@@ -1,0 +1,49 @@
+services:
+  diagram2algo:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: diagram2algo
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../data:/app/data
+      - ../docs:/app/docs
+      - ../eval_output:/app/eval_output
+    env_file:
+      - ../.env
+    environment:
+      - OLLAMA_URL=http://ollama:11434
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 1G
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Start with: docker compose --profile ollama up
+  ollama:
+    image: ollama/ollama
+    container_name: ollama
+    profiles: ["ollama"]
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+
+volumes:
+  ollama_data:

@@ -1,0 +1,88 @@
+@startuml
+title Class Diagram: Система обмена сообщениями
+
+class User {
+  + UUID userId
+  + String username
+  + String phoneNumber
+  + String status
+  + Boolean isOnline
+  
+  + sendMessage(chatId, content)
+  + createChat(participants)
+  + updateStatus(status)
+}
+
+class Chat {
+  + UUID chatId
+  + Boolean isGroup
+  + DateTime createdAt
+  
+  + addMessage(message)
+  + addParticipant(user)
+  + removeParticipant(user)
+}
+
+class Message {
+  + UUID messageId
+  + UUID senderId
+  + String content
+  + DateTime createdAt
+  + DateTime editedAt
+  + Boolean isRead
+  
+  + edit(newContent)
+  + markAsRead()
+}
+
+class Media {
+  + String url
+  + Enum mediaType
+  + Integer size
+  
+  + download()
+  + preview()
+}
+
+class ContactList {
+  + UUID ownerId
+  + List<User> contacts
+  
+  + addContact(user)
+  + removeContact(user)
+  + searchContact(name)
+}
+
+class Notification {
+  + UUID notificationId
+  + UUID userId
+  + Enum type
+  + DateTime createdAt
+  + Boolean isDelivered
+  
+  + send()
+  + markDelivered()
+}
+
+class MessageStore {
+  + String storagePath
+  
+  + saveMessage(message)
+  + loadMessages(chatId)
+  + deleteMessage(messageId)
+}
+
+' Связи между классами
+User "1" --> "0..*" Chat : participates
+User "1" --> "1" ContactList : owns
+User "1" --> "0..*" Notification : manages
+
+Chat "1" --> "0..*" Message : contains
+Chat "1" --> "0..*" Media : contains
+
+Message "1" --> "0..1" Media : имеет
+
+User "1" --> "0..*" Message : отправляет
+MessageStore "1" --> "0..*" Message : хранит
+
+@enduml

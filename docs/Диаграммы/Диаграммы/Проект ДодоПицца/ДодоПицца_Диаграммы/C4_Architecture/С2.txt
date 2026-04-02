@@ -1,0 +1,53 @@
+@startuml
+!define C4P https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master
+!includeurl C4P/C4_Container.puml
+
+title Платформа онлайн-заказов Додо Пицца\n«Software System»
+
+Person(Клиент, "Клиент", "Оформляет и отслеживает заказы через приложения")
+
+System_Boundary(dodo_pizza, "Платформа онлайн-заказов Додо Пицца") {
+  
+  Container(WebApp, "Web-приложение", "React, TypeScript", "Оформляет/отслеживает заказы (HTTPS)")
+  Container(MobileApp, "Мобильное приложение", "Flutter iOS/Android", "Оформляет/отслеживает заказы (HTTPS)")
+  Container(DesktopApp, "Десктоп приложение", "Electron (JavaScript, HTML, CSS)", "Оформляет/отслеживает заказы с ПК (HTTPS)")
+  
+  Container(BackendAPI, "Backend API", "Java 21, Spring Boot", "REST /menu, /cart, /orders, /payments, /tracking (HTTPS/JSON)")
+  
+  Container(NotificationsFacade, "Фасад уведомлений", "Spring Boot", "События для уведомлений")
+  Container(RestaurantAdapter, "Адаптер операционной программы ресторана", "Spring Boot", "Заказы, статусы")
+  Container(PaymentAdapter, "Адаптер платёжного провайдера", "Spring Boot", "Платежи, возвраты")
+  Container(GeoAdapter, "Адаптер геокодирования", "Spring Boot", "Запросы геокодирования и зоны доставки")
+  Container(RedisCache, "Кэш / очереди задач", "Redis", "Кэш меню, сессий, очередей задач")
+  Container(Database, "БД приложений", "PostgreSQL", "Чтение/запись заказов, меню, статусов, платежей")
+}
+
+System_Ext(NotifySystem, "Сервис уведомлений", "External System", "Отправка SMS/email/push")
+System_Ext(RestaurantSystem, "Операционная программа ресторана", "External System", "Обмен заказами и статусами")
+System_Ext(PaymentProvider, "Платёжный провайдер", "External System", "Платежи и webhooks")
+System_Ext(GeoService, "Картографический сервис", "External System", "Геокодирование / зоны доставки")
+
+' Взаимосвязи клиента с приложениями
+Rel(Клиент, WebApp, "Оформляет/отслеживает заказ (HTTPS)")
+Rel(Клиент, MobileApp, "Оформляет/отслеживает заказ (HTTPS)")
+Rel(Клиент, DesktopApp, "Оформляет/отслеживает заказ (HTTPS)")
+
+' Связи внутри системы
+Rel(WebApp, BackendAPI, "REST /menu, /cart, /orders, /payments, /tracking (HTTPS/JSON)")
+Rel(MobileApp, BackendAPI, "REST /menu, /cart, /orders, /payments, /tracking (HTTPS/JSON)")
+Rel(DesktopApp, BackendAPI, "REST /menu, /cart, /orders, /payments, /tracking (HTTPS/JSON)")
+
+Rel(BackendAPI, NotificationsFacade, "События для уведомлений")
+Rel(BackendAPI, RestaurantAdapter, "Заказы, статусы")
+Rel(BackendAPI, PaymentAdapter, "Платежи, возвраты")
+Rel(BackendAPI, GeoAdapter, "Запросы геокодирования и зоны доставки")
+Rel(BackendAPI, RedisCache, "Кэш меню, сессий, очередей задач")
+Rel(BackendAPI, Database, "Чтение/запись заказов, меню, статусов, платежей")
+
+' Взаимосвязи адаптеров с внешними системами
+Rel(NotificationsFacade, NotifySystem, "Отправка SMS/email/push")
+Rel(RestaurantAdapter, RestaurantSystem, "Обмен заказами и статусами")
+Rel(PaymentAdapter, PaymentProvider, "Платежи и webhooks")
+Rel(GeoAdapter, GeoService, "Геокодирование / зоны доставки")
+
+@enduml

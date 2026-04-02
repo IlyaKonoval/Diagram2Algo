@@ -1,0 +1,33 @@
+@startuml Simple_API_Gateway_C3
+!define C4P https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master
+!includeurl C4P/C4_Component.puml
+
+Title C3 — API Gateway
+
+Container_Boundary(bGW, "API Gateway") {
+  Component(edge, "Edge Proxy (Envoy/Nginx)", "TLS, ingress, HTTP/gRPC")
+  Component(auth, "Auth Filter", "JWT/OAuth validation")
+  Component(rate, "Rate Limiter", "quota, throttling")
+  Component(router, "Router / Versioning", "route -> backend services")
+  Component(upload, "Upload Handler", "presigned URLs / chunk handling")
+  Component(cache, "Cache (Redis)", "hot responses")
+  Component(obs, "Observability", "traces, logs, metrics")
+}
+
+System_Ext(client, "Client (Browser / Mobile)")
+System_Ext(objstore, "Object Storage (S3)")
+System_Ext(backends, "Backend services (Video, Payments, ...)")
+System_Ext(authsvc, "Auth Service / IdP")
+
+Rel(client, edge, "HTTPS (REST / gRPC)")
+Rel(edge, auth, "validate token / scopes")
+Rel(edge, rate, "check quotas")
+Rel(edge, cache, "check / set cache")
+Rel(edge, upload, "issue presigned URL or proxy chunk")
+Rel(edge, router, "forward request")
+Rel(router, backends, "HTTPS/gRPC")
+Rel(upload, objstore, "presigned URL / verify upload")
+Rel(edge, obs, "emit trace / logs")
+Rel(auth, authsvc, "JWKs / introspect (HTTPS)")
+
+@enduml

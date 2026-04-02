@@ -1,0 +1,85 @@
+@startuml Class_Diagram
+title Диаграмма классов
+
+enum VideoStatus {
+  PROCESSING
+  PUBLISHED
+  PRIVATE
+}
+
+class User {
+  - UUID id
+  - String email
+  - String displayName
+  - DateTime createdAt
+  + uploadVideo(metadata: VideoMetadata, file): Video
+  + subscribe(channel: Channel): void
+  + likeVideo(video: Video): Like
+}
+
+class Channel {
+  - UUID id
+  - String name
+  - String description
+  - DateTime createdAt
+  + publishVideo(v: Video): void
+}
+
+class Video {
+  - UUID id
+  - String title
+  - String description
+  - DateTime uploadDate
+  - VideoStatus status
+  - int viewCount
+  - String storageKey
+  + incrementViews(): void
+  + toggleLike(u: User, isLike: boolean): void
+}
+
+class VideoVariant {
+  - UUID id
+  - String quality
+  - String codec
+  - String storageKey
+  - long size
+}
+
+class Thumbnail {
+  - UUID id
+  - String storageKey
+  - int width
+  - int height
+}
+
+class Comment {
+  - UUID id
+  - String text
+  - DateTime createdAt
+  + edit(text: String): void
+}
+
+class Subscription {
+  - UUID id
+  - DateTime subscribedAt
+}
+
+class Like {
+  - UUID id
+  - boolean isLike
+  - DateTime createdAt
+}
+
+' Associations
+User "1" o-- "0..*" Channel : owns
+Channel "1" o-- "0..*" Video : contains
+Video "1" *-- "0..*" VideoVariant : has >
+Video "1" *-- "0..*" Thumbnail : thumbnails >
+Video "1" o-- "0..*" Comment : comments >
+User "1" o-- "0..*" Comment : authors >
+User "1" o-- "0..*" Subscription : subscriptions >
+Subscription "1" -- "1" Channel : to >
+User "1" o-- "0..*" Like : likes >
+Like "1" -- "1" Video : for >
+
+@enduml

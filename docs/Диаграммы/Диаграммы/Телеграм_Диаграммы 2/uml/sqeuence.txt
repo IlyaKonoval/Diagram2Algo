@@ -1,0 +1,35 @@
+@startuml
+title Sequence Diagram: Отправка сообщения в чате
+
+participant "Client App" as Client
+participant "MessageController" as Controller
+participant "ChatService" as ChatService
+participant "MessageStore" as MessageStore
+participant "NotificationService" as NotificationService
+
+Client -> Controller: 1. sendMessage(chatId, userId, content)
+Controller -> ChatService: 2. validateChat(chatId)
+ChatService --> Controller: 3. validationResult
+
+alt Чат не найден
+    Controller --> Client: 12. Error(ChatNotFound)
+else Пользователь не в чате
+    Controller --> Client: 13. Error(Forbidden)
+else Успешная валидация
+    Controller -> MessageStore: 4. loadMessages(chatId)
+    MessageStore --> Controller: 5. messages
+    
+    Controller -> MessageStore: 7. saveMessage(message)
+    MessageStore --> Controller: 8. messageSaved
+    
+    Controller -> NotificationService: 9. notifyParticipants(chatId, messageId)
+    
+    loop Для каждого участника чата
+        NotificationService -> NotificationService: 10. deliverNotification(messageId)
+    end
+    
+    NotificationService --> Controller: 11. messageSent
+    Controller --> Client: 11. messageSent
+end
+
+@enduml

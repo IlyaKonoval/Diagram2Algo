@@ -1,0 +1,58 @@
+@startuml
+abstract class User {
+  +id: number
+  +name: string
+  +email: string
+  +authenticate()
+}
+
+class Student extends User {
+  +studentId: string
+  +group: string
+  +createRequest()
+  +viewRequest()
+}
+
+class Employee extends User {
+  +employeeId: string
+  +position: string
+  +processRequest()
+  +assignRequest()
+}
+
+class Request {
+  +id: number
+  +creationDate: date
+  +completionDate: date
+  +data: JSON
+  +updateStatus()
+  +addMessage()
+}
+
+class RequestType {
+  +id: number
+  +name: string
+  +description: string
+  +processingTime: string
+  +template: JSON
+}
+
+class Message {
+  +id: number
+  +text: string
+  +sentDate: date
+}
+
+enum Status {
+  PENDING
+  PROCESSING
+  COMPLETED
+  REJECTED
+}
+
+Student "1" -- "0..*" Request: "создает"
+Employee "1" -- "0..*" Request: "обрабатывает"
+Request "1" -- "1" RequestType : "имеет тип"
+Request "1" -- "1" Status : "имеет статус"
+Request "1" -- "0..*" Message : "содержит"
+@enduml

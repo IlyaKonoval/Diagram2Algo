@@ -1,0 +1,120 @@
+@startuml
+' ------------------------------------------------------------
+' C3 diagram (pure PlantUML, no external libraries)
+' Top-to-bottom layout
+' ------------------------------------------------------------
+
+skinparam shadowing false
+skinparam linetype spline
+skinparam defaultFontName Arial
+
+skinparam RectangleRoundCorner 12
+skinparam RectangleBorderColor #777777
+skinparam RectangleBackgroundColor #F7F7F7
+
+skinparam FrameBorderColor #444444
+skinparam FrameBackgroundColor transparent
+skinparam FrameFontStyle bold
+
+skinparam ArrowColor #555555
+skinparam ArrowThickness 1.2
+
+top to bottom direction
+
+' =========================
+' System boundary (ISBS)
+' =========================
+frame "Информационная система\nбиблиотечного сервиса (ISBS)" as ISBS {
+
+  ' -------------------------
+  ' Container: Library API
+  ' -------------------------
+  frame "Library API\n(Java + Spring)" as API {
+
+    rectangle "Reservation Management" as Res
+    rectangle "Lending Management" as Lend
+    rectangle "Fine Management" as Fine
+    rectangle "Audit & Logging\n(/логирование в ELK)" as Audit
+
+    rectangle "Payment Integration\n(REST client)" as PayInt
+    rectangle "Catalog Management" as Cat
+    rectangle "Auth & User Management\n(Spring Security)" as Auth
+    rectangle "Notification Service\n(RabbitMQ producer)" as Notif
+
+    rectangle "Repositories\n(Spring Data JPA)" as Repo
+
+    ' -------------------------
+    ' Layout (hidden) – force rows like in the picture
+    ' -------------------------
+
+    ' Top row (left -> right): Res, Lend, Fine, Audit
+    Res  -[hidden]right-> Lend
+    Lend -[hidden]right-> Fine
+    Fine -[hidden]right-> Audit
+
+    ' Second row under Fine/Audit area
+    Fine  -[hidden]down-> PayInt
+    PayInt -[hidden]right-> Cat
+    Cat   -[hidden]right-> Auth
+    Auth  -[hidden]right-> Notif
+
+    ' Put Notif below Audit (right side column feel)
+    Audit -[hidden]down-> Notif
+
+    ' Bottom row: Repo centered under the “business” row
+    PayInt -[hidden]down-> Repo
+    Notif -[hidden]down-> Repo
+    Res   -[hidden]down-> Repo
+  }
+
+  database "Library DB\n(PostgreSQL)" as DB
+  Repo --> DB : чтение/запись\nдоменных данных
+}
+
+' =========================
+' External systems (right side)
+' =========================
+rectangle "Logging & Monitoring\n(ELK stack)" as ELK
+rectangle "Платёжный сервис" as PaySrv
+rectangle "Cache\n(Redis)" as Redis
+rectangle "Message Broker\n(RabbitMQ)" as MQ
+rectangle "Почтовый/SMS-сервис" as SMS
+
+' Force external column to be on the right of Library API
+API -[hidden]right-> ELK
+
+' Place ELK above the external “row” (PaySrv, Redis, MQ)
+ELK -[hidden]down-> PaySrv
+PaySrv -[hidden]right-> Redis
+Redis  -[hidden]right-> MQ
+
+' Place SMS below MQ (bottom-right)
+MQ -[hidden]down-> SMS
+
+' =========================
+' Relations inside Library API
+' =========================
+Res  --> Repo  : брони, очереди
+Lend --> Repo  : выдачи, экземпляры
+
+Fine --> Repo   : штрафы, тарифы
+Fine --> PayInt : запросы\nсоздания платежей,\nполучение статусов
+
+PayInt --> Repo   : штрафы,\nплатёжные транзакции
+Cat   --> Repo    : материалы, экземпляры
+Auth  --> Repo    : пользователи, роли
+Notif --> Repo    : данные для\nуведомлений
+
+' =========================
+' Integrations to externals
+' =========================
+Audit  --> ELK     : отправка логов\nи событий аудита
+PayInt --> PaySrv  : REST API\nоплаты штрафов
+
+Cat  --> Redis : кэширование\nрезультатов поиска
+Auth --> Redis : кэш сессий/\nтокенов
+
+Notif --> MQ : публикация\nзадач на уведомления
+MQ --> SMS   : отправка\nemail/SMS
+
+@enduml

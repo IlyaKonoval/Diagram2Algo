@@ -1,0 +1,50 @@
+@startuml
+title Диаграмма вариантов использования: Платформа онлайн-заказов Додо Пицца
+
+actor "Клиент" as Client
+actor "Сотрудник кухни" as KitchenStaff
+actor "Курьер" as Courier
+actor "Платёжный провайдер" as Payment
+actor "Операционная система\nресторана" as RestaurantSystem
+
+rectangle "Платформа онлайн-заказов\nДодо Пицца" {
+    usecase "Просмотреть\nменю" as UC_ViewMenu
+    usecase "Оформить\nзаказ" as UC_CreateOrder
+    usecase "Отменить\nзаказ" as UC_CancelOrder
+    usecase "Отследить\nзаказ" as UC_TrackOrder
+    usecase "Применить\nпромокод" as UC_ApplyPromo
+    usecase "Оплата при\nполучении" as UC_PayOnDelivery
+    usecase "Рассчитать\nстоимость" as UC_CalcCost
+    usecase "Проверить\nдоступность\nпозиций" as UC_CheckAvailability
+    usecase "Выбрать тип\nполучения" as UC_SelectType
+    usecase "Автопринятие и\nотправка на кухню" as UC_AutoSendToKitchen
+    usecase "Доставить\nзаказ" as UC_DeliverOrder
+    usecase "Оплатить\nонлайн" as UC_PayOnline
+    usecase "Выдать заказ\nпри самовывозе" as UC_Pickup
+}
+
+
+Client --> UC_ViewMenu
+Client --> UC_CreateOrder
+Client --> UC_CancelOrder
+Client --> UC_TrackOrder
+
+KitchenStaff --> UC_AutoSendToKitchen
+Courier --> UC_DeliverOrder
+Payment --> UC_PayOnline
+
+RestaurantSystem --> UC_Pickup
+RestaurantSystem --> UC_DeliverOrder
+RestaurantSystem --> UC_AutoSendToKitchen
+
+' Связи include/extend
+UC_CreateOrder ..> UC_ApplyPromo : «extend»
+UC_CreateOrder ..> UC_PayOnDelivery : «extend»
+UC_CreateOrder ..> UC_CalcCost : «include»
+UC_CreateOrder ..> UC_CheckAvailability : «include»
+UC_CreateOrder ..> UC_SelectType : «include»
+UC_CreateOrder ..> UC_AutoSendToKitchen : «include»
+UC_CreateOrder ..> UC_DeliverOrder : «extend»
+UC_CreateOrder ..> UC_PayOnline : «include»
+
+@enduml

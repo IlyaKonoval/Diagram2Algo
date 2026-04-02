@@ -1,0 +1,45 @@
+@startuml
+actor "Студент" as student
+participant "Веб-портал" as frontend
+participant "Бэкенд" as backend
+database "База данных" as db
+
+title Сценарий: Формирование заявки студентом
+
+student -> frontend: 1. Оповещает о желании создать заявку
+activate frontend
+frontend -> backend: 2. Запрашивает форму и данные для заявки
+activate backend
+backend --> frontend: 2.1 Передаёт форму и сопряжённую информацию
+deactivate backend
+frontend --> student: 2.2 Отображает форму
+
+alt Студент заполняет и отправляет форму (Основной сценарий)
+    student -> frontend: 3. Передаёт заполненную форму
+    frontend -> backend: 3.1 Отправляет данные заявки
+    activate backend
+    backend -> backend: 4. Проверяет данные (валидация)
+    
+    err Данные корректны
+        backend -> db: 5. Создаёт запись о новой заявке
+        activate db
+        db --> backend: 5.1 Подтверждает создание
+        deactivate db
+        
+        backend --> frontend: 6.1 Возвращает подтверждение
+        deactivate backend
+        frontend --> student: 6.2 Показывает сообщение об успехе
+        
+    else Данные некорректны
+        backend --> frontend: Возвращает ошибку валидации
+        deactivate backend
+        frontend --> student: Показывает сообщение об ошибке
+    end
+
+else Студент отменяет создание заявки (Альтернативный сценарий)
+    student -> frontend: 2.а.1, 2.а.2 Нажимает "Отмена"
+    frontend --> student: 2.а.3, 2.а.4 Форма закрывается, процесс завершен
+end
+deactivate frontend
+
+@enduml

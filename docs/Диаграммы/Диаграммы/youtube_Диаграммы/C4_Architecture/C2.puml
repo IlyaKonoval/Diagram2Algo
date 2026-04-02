@@ -1,0 +1,53 @@
+@startuml C2_Short_Compact
+' Компактная и «безопасная» версия (минимум стрелок)
+!define C4P https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master
+!includeurl C4P/C4_Container.puml
+
+' Уменьшаем интервалы для компактности
+skinparam nodesep 40
+skinparam ranksep 40
+skinparam linetype ortho
+
+title C2
+
+Person(viewer, "Зритель")
+Person(creator, "Контент-мейкер")
+Person(moderator, "Модератор")
+
+System_Boundary(clients, "Клиентские приложения") {
+  Container(web_app, "Web", "React/HTTPS", "Браузерный клиент")
+  Container(mobile_app, "Mobile", "iOS/Android", "Мобильные приложения")
+  Container(desktop_app, "Desktop", "Electron/Native", "Десктопный клиент")
+}
+
+System_Boundary(sys, "Backend") {
+  Container(api_gateway, "API Gateway", "Node.js/Envoy", "Auth, routing")
+  Container(video_svc, "Video Service", "Go/Java", "Метаданные видео")
+  Container(notif_svc, "Notification Service", "Node/Python", "APNs/FCM/WebPush/Email")
+  ContainerDb(storage, "Object Storage (S3)", "S3", "Видео-файлы")
+  ContainerDb(metadata_db, "Metadata DB", "PostgreSQL", "Пользователи, видео")
+  Container(queue, "Message Bus", "Kafka/RabbitMQ", "Асинхронные задачи")
+  Container(cache, "Redis", "Redis", "Кэш")
+}
+
+' ACTORS -> CLIENTS (по одной стрелке на актора, а не на каждый клиент)
+Rel(viewer, clients, "")
+Rel(creator, clients, "")
+Rel(moderator, clients, "Использует все клиентские приложения")
+
+' CLIENTS -> BACKEND (одна связь от группы клиентов к API)
+Rel(clients, api_gateway, "REST/gRPC over HTTPS", "REST для web, gRPC для мобильных клиентов")
+
+' Внутренние связи
+Rel(api_gateway, video_svc, "gRPC/REST (internal)")
+Rel(video_svc, metadata_db, "SQL read/write")
+Rel(video_svc, storage, "Signed URLs (PUT/GET)")
+Rel(video_svc, queue, "Publish/consume jobs (async)")
+Rel(notif_svc, queue, "Consume notification jobs (async)")
+Rel(notif_svc, clients, "Доставляет уведомления на все платформы (APNs/FCM/WebPush/SSE)")
+
+' Внешние интеграции
+System_Ext(cdn, "CDN", "Cloudflare/CloudFront")
+Rel(storage, cdn, "Origin pull")
+
+@enduml

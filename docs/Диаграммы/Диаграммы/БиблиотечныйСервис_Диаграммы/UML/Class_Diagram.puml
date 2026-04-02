@@ -1,0 +1,202 @@
+@startuml
+' ===== Style (без внешних библиотек) =====
+skinparam shadowing true
+skinparam roundcorner 6
+skinparam classAttributeIconSize 0
+skinparam classBorderColor #A0A0A0
+skinparam classBackgroundColor #FFFFFF
+skinparam classHeaderBackgroundColor #F2F2F2
+skinparam ArrowColor #707070
+skinparam linetype polyline
+
+' Чтобы кружочек "C" был как на картинке
+!define C4ST <<(C,#9BD3AE)>>
+
+' ===== Entities =====
+class Person C4ST {
+  +Long id
+  +String lastName
+  +String firstName
+  +String middleName
+  +Date birthDate
+  +String gender        // MALE, FEMALE, OTHER
+  +String role          // READER, LIBRARIAN, ADMIN
+}
+
+class LibraryBranch C4ST {
+  +Long id
+  +String address
+  +Integer staffCount
+  +String status        // ACTIVE, INACTIVE
+}
+
+class Author C4ST {
+  +Long id
+  +String lastName
+  +String firstName
+  +String middleName
+}
+
+class ReaderAccount C4ST {
+  +Long id
+  +Long personId
+  +String email
+  +String login
+  +String passwordHash
+}
+
+class AdminAccount C4ST {
+  +Long id
+  +Long personId
+  +Long libraryBranchId
+  +String login
+  +String passwordHash
+}
+
+class LibrarianAccount C4ST {
+  +Long id
+  +Long personId
+  +Long libraryBranchId
+  +String login
+  +String passwordHash
+}
+
+class Material C4ST {
+  +Long id
+  +Long libraryBranchId
+  +String title
+  +Long authorId
+  +String publisher
+  +Integer publishYear
+  +String genre
+  +String language
+  +String isbn
+  +Integer copiesCount
+}
+
+class Copy C4ST {
+  +Long id
+  +Long materialId
+  +String inventoryNumber
+  +String status        // AVAILABLE, LOANED, RESERVED, REMOVED
+}
+
+class Reservation C4ST {
+  +Long id
+  +Long readerId
+  +Long librarianId
+  +Long libraryBranchId
+  +Date reservationDate
+  +Date reservationUntil
+  +String status        // ACTIVE, CANCELLED, EXPIRED, USED
+  +Long materialId
+}
+
+class ReaderCard C4ST {
+  +Long id
+  +Long readerId
+  +String lastName
+  +String firstName
+  +String middleName
+  +String status        // ACTIVE, BLOCKED
+  +Integer reservationsCount
+}
+
+class FineTariff C4ST {
+  +Long id
+  +String violationType // OVERDUE, LOST, DAMAGED
+  +BigDecimal ratePerDay
+  +BigDecimal maxAmount
+  +Date validFrom
+  +Date validTo
+}
+
+class Loan C4ST {
+  +Long id
+  +Long reservationId
+  +Date loanDate
+  +String status        // ACTIVE, RETURNED, OVERDUE
+}
+
+class Fine C4ST {
+  +Long id
+  +Long readerCardId
+  +Long loanId
+  +Long fineTariffId
+  +String description
+  +Date accruedAt
+  +Date paidAt
+  +String status        // ACTIVE, PAID, CANCELLED
+}
+
+class PaymentTransaction C4ST {
+  +Long id
+  +Long fineId
+  +String externalPaymentId
+  +BigDecimal amount
+  +String status        // CREATED, SUCCESS, DECLINED, CANCELLED, PENDING
+  +Date createdAt
+  +Date updatedAt
+}
+
+class Notification C4ST {
+  +Long id
+  +Long readerCardId
+  +String type          // ACTIVATION, RESERVATION, LOAN, FINE
+  +String channel       // EMAIL, SMS
+  +String subject
+  +String status        // PLANNED, SENT, ERROR
+  +Date sentAt
+  +Long fineId
+  +Long reservationId
+  +Long loanId
+}
+
+' ===== Relations (кратности/подписи как на схеме) =====
+Person "1" -- "0..1" ReaderAccount : reader
+Person "1" -- "0..1" AdminAccount  : admin
+Person "1" -- "0..1" LibrarianAccount : librarian
+
+LibraryBranch "1" -- "0..*" AdminAccount
+LibraryBranch "1" -- "0..*" LibrarianAccount
+LibraryBranch "1" -- "0..*" Material
+LibraryBranch "1" -- "0..*" Reservation
+
+Author "1" -- "0..*" Material : writes
+
+ReaderAccount "1" -- "1" ReaderCard : card
+ReaderAccount "1" -- "0..*" Reservation
+LibrarianAccount "1" -- "0..*" Reservation
+
+Material "1" -- "0..*" Reservation
+Material "1" -- "0..*" Copy : copies
+
+Reservation "1" -- "0..1" Loan
+
+ReaderCard "1" -- "0..*" Fine
+FineTariff "1" -- "0..*" Fine
+Loan "1" -- "0..*" Fine
+
+Fine "1" -- "0..*" PaymentTransaction : payments
+
+ReaderCard "1" -- "0..*" Notification
+Reservation "0..1" -- "0..*" Notification
+Loan "0..1" -- "0..*" Notification
+Fine "0..1" -- "0..*" Notification
+
+' ===== Layout hints (чтобы было максимально похоже) =====
+Person -[hidden]right- LibraryBranch
+LibraryBranch -[hidden]right- Author
+
+ReaderAccount -[hidden]right- AdminAccount
+AdminAccount -[hidden]right- LibrarianAccount
+
+Reservation -[hidden]right- Material
+Material -[hidden]right- Copy
+
+ReaderCard -[hidden]right- FineTariff
+FineTariff -[hidden]right- Loan
+
+PaymentTransaction -[hidden]right- Notification
+Reservation -[hidden]down- Fine
+@enduml

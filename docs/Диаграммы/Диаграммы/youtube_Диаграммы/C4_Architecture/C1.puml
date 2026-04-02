@@ -1,0 +1,29 @@
+@startuml C1_Context
+!include <C4/C4_Context>
+
+title Диаграмма контекста
+
+Person(user, "Пользователь", "Зритель / Автор контента")
+Person(creator, "Контент-мейкер", "Загружает видео, управляет каналом")
+Person(admin, "Администратор", "Модерация, аналитика")
+
+System_Boundary(ext, "Внешние системы") {
+  System(oauth, "OAuth-провайдеры", "Google, Apple, VK")
+  System(cdn, "CDN", "Cloudflare / CloudFront")
+  System(email_service, "Email-сервис", "SendGrid")
+  System(sms_service, "SMS-шлюз", "Twilio")
+  System(analytics, "Аналитика", "Google Analytics / Яндекс.Метрика")
+}
+
+System(youtube_clone, "YouTube", "Видео-платформа")
+
+Rel(user, youtube_clone, "Просмотр видео, лайки/дизлайки")
+Rel(creator, youtube_clone, "Загрузка видео, управление каналом")
+Rel(admin, youtube_clone, "Модерация контента, аналитика")
+Rel(youtube_clone, oauth, "Аутентификация и авторизация")
+Rel(youtube_clone, cdn, "Загрузка и доставка видео")
+Rel(youtube_clone, email_service, "Уведомления о подписках")
+Rel(youtube_clone, sms_service, "2FA уведомления")
+Rel(youtube_clone, analytics, "Сбор метрик просмотров")
+
+@enduml

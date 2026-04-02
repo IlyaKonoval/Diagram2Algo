@@ -1,0 +1,89 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+LAYOUT_LEFT_RIGHT()
+skinparam monochrome true
+skinparam shadowing false
+skinparam backgroundColor white
+skinparam linetype polyline
+
+System_Ext(restoOps, "Операционная программа\nресторана", "External System")
+System_Ext(notifyExt, "Сервис уведомлений", "External System")
+System_Ext(paymentProvider, "Платёжный\nпровайдер", "External System")
+System_Ext(mapExt, "Картографический\nсервис", "External System")
+
+ContainerDb_Ext(redis, "Кэш / очереди\n(Redis)", "Database")
+ContainerDb_Ext(appDb, "БД приложений\n(PostgreSQL)", "Database")
+
+Container_Boundary(backend, "Backend API\n(Java 21 / Spring Boot)\n<<Container>>") {
+  Component(rest, "REST Controllers\n(/menu, /cart, /orders,\n/payments, /tracking)", "Spring MVC", "<<Component>>")
+
+  Component(orderSvc, "OrderService", "", "<<Component>>")
+  Component(pricingSvc, "PricingService", "", "<<Component>>")
+  Component(availabilitySvc, "AvailabilityService", "", "<<Component>>")
+  Component(promoSvc, "PromoService", "", "<<Component>>")
+  Component(fulfillmentSvc, "FulfillmentService", "", "<<Component>>")
+
+  Component(paymentSvc, "PaymentService", "", "<<Component>>")
+  Component(paymentGw, "PaymentGatewayAdapter", "", "<<Component>>")
+
+  Component(opsGw, "OpsProgramGateway", "", "<<Component>>")
+  Component(notificationFacade, "NotificationFacade", "", "<<Component>>")
+
+  Component(geocoding, "GeocodingAdapter", "", "<<Component>>")
+
+  ComponentDb(menuRepo, "MenuRepository\n(JPA/SQL)", "", "<<Component:Database>>")
+  ComponentDb(orderRepo, "OrderRepository\n(JPA/SQL)", "", "<<Component:Database>>")
+  ComponentDb(paymentRepo, "PaymentRepository\n(JPA/SQL)", "", "<<Component:Database>>")
+
+  rest -[hidden]-> orderSvc
+  orderSvc -[hidden]-> pricingSvc
+  pricingSvc -[hidden]-> availabilitySvc
+  availabilitySvc -[hidden]-> orderRepo
+  orderRepo -[hidden]-> promoSvc
+  promoSvc -[hidden]-> notificationFacade
+  paymentSvc -[hidden]-> paymentGw
+  opsGw -[hidden]-> notificationFacade
+  geocoding -[hidden]-> menuRepo
+}
+
+Rel_R(rest, fulfillmentSvc, "Запрос статусов\nдоставки/самовывоза")
+Rel_R(rest, pricingSvc, "Расчёт стоимости")
+Rel_R(rest, availabilitySvc, "Проверка\nдоступности позиций")
+Rel_R(rest, orderSvc, "Создание/получение/\nотмена заказов")
+Rel_R(rest, promoSvc, "Проверка и\nприменение промокода")
+Rel_D(rest, paymentSvc, "Инициация оплаты\nи возвратов")
+
+Rel_R(orderSvc, pricingSvc, "Использует\nдля расчёта стоимости")
+Rel_R(orderSvc, availabilitySvc, "Проверяет\nпозиции меню")
+Rel_R(orderSvc, orderRepo, "Читает/пишет\nзаказы")
+Rel_R(orderSvc, promoSvc, "Применяет\nскидки")
+
+Rel_R(fulfillmentSvc, orderRepo, "Обновляет\nстатусы исполнения")
+Rel_R(fulfillmentSvc, opsGw, "Передаёт заказы\nи статусы в\nоперационную программу")
+Rel_R(fulfillmentSvc, notificationFacade, "События о\nстатусах заказа\nклиенту")
+
+Rel_R(paymentSvc, paymentGw, "Вызовы\nплатёжного шлюза")
+Rel_R(paymentSvc, paymentRepo, "Читает/пишет\nплатежи")
+Rel_R(paymentSvc, notificationFacade, "События об\nуспешной/ошибочной\nоплате")
+
+Rel_D(pricingSvc, redis, "Кэш тарифов/меню")
+Rel_D(availabilitySvc, redis, "Кэш доступности")
+Rel_D(paymentGw, redis, "HTTPS/Webhooks\nплатежи и callbacks")
+
+Rel_D(geocoding, mapExt, "HTTPS\nгеокодирование,\nзоны доставки")
+
+Rel_R(opsGw, restoOps, "HTTPS/AMQP\nзаказы и статусы")
+Rel_R(notificationFacade, notifyExt, "SMTP/HTTPS\nSMS/email/push")
+
+Rel_D(paymentGw, paymentProvider, "")
+
+Rel_D(menuRepo, appDb, "Таблица меню")
+Rel_D(orderRepo, appDb, "Таблица заказов")
+Rel_D(paymentRepo, appDb, "Таблица платежей")
+
+restoOps -[hidden]down-> notifyExt
+redis -[hidden]down-> paymentProvider
+paymentProvider -[hidden]down-> appDb
+
+@enduml

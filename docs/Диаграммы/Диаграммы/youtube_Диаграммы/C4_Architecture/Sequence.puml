@@ -1,0 +1,43 @@
+@startuml Sequence_Diagram
+title Загрузка и публикация видео
+
+actor Creator as creator
+participant "Mobile App" as app
+participant "API Gateway" as gateway
+participant "VideoController" as controller
+participant "VideoService" as service
+participant "S3 Storage" as s3
+participant "Transcoding Service" as transcoder
+database "PostgreSQL" as db
+
+creator -> app : Выбор файла + метаданные
+app -> gateway : POST /videos
+gateway -> controller : gRPC UploadRequest
+activate controller
+
+controller -> service : createDraftVideo(metadata)
+activate service
+
+service -> db : saveVideoMetadata(status=PENDING)
+activate db
+db --> service : videoId
+deactivate db
+
+service -> s3 : uploadOriginal(videoId, file)
+activate s3
+s3 --> service : storagePath
+deactivate s3
+
+service -> transcoder : QueueProcessingJob(videoId, storagePath)
+activate transcoder
+transcoder --> service : jobAccepted
+deactivate transcoder
+
+service --> controller : VideoResponse(processing)
+deactivate service
+controller --> gateway : 202 Accepted
+deactivate controller
+gateway --> app : Ответ с videoId
+app --> creator : Показать статус "Обработка..."
+
+@enduml

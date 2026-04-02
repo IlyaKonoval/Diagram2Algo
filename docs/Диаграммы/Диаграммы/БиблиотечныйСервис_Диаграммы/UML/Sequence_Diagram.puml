@@ -1,0 +1,95 @@
+@startuml
+' --- Styling (no external libs) ---
+skinparam shadowing false
+skinparam backgroundColor white
+
+skinparam sequence {
+  ArrowColor #000000
+  ParticipantBorderColor #9A9A9A
+  ParticipantBackgroundColor #E6E6E6
+  ParticipantFontColor #000000
+
+  LifeLineBorderColor #B5B5B5
+
+  DividerBorderColor #000000
+  DividerBackgroundColor #FFFFFF
+  DividerFontStyle bold
+
+  GroupBorderColor #000000
+  GroupBackgroundColor #FFFFFF
+
+  NoteBackgroundColor #FFF2CC
+  NoteBorderColor #B5A600
+}
+
+' --- Participants ---
+actor Reader
+participant "React Web App" as React
+participant "Spring Library API" as API
+database "Library DB\n(PostgreSQL)" as DB
+collections "Redis Cache" as Redis
+queue "RabbitMQ" as MQ
+participant "Payment Service" as Pay
+
+== Load list of active fines ==
+
+Reader -> React : Open "My fines" page
+React -> API : GET /api/fines
+API -> Redis : Lookup fines for current reader
+Redis --> API : Cache miss (or cached data)
+API -> DB : SELECT active Fine\nJOIN ReaderCard/ReaderAccount
+DB --> API : List<Fine>
+API -> MQ : Publish "FinesViewed" event (audit)
+API --> React : JSON list of active fines
+React -> Reader : Render list of fines
+
+== Initiate payment for a fine ==
+
+Reader -> React : Click "Pay" for selected fine
+React -> API : POST /api/fines/{fineId}/pay
+
+note right of API
+1. Validate fine status (ACTIVE)
+2. Calculate amount (using FineTariff)
+end note
+
+API -> DB : INSERT PaymentTransaction\n(status="CREATED", fineId, amount)
+DB --> API : PaymentTransaction(id, externalPaymentId)
+API -> MQ : Publish "PaymentCreated" event (audit)
+API -> Pay : Create payment\n(amount, externalPaymentId, callbackUrl)
+Pay --> API : Payment session / redirect URL
+API --> React : Payment redirect URL
+React -> Reader : Redirect to payment page (Payment Service)
+
+== Payment processing ==
+
+Reader -> Pay : Enter payment details\nand confirm
+Pay -> Pay : Process payment
+
+alt [Payment successful]
+  Pay -> API : POST /api/payments/callback\n(externalPaymentId, status=SUCCESS)
+  API -> DB : SELECT PaymentTransaction\nBY externalPaymentId
+  DB --> API : PaymentTransaction
+  API -> DB : UPDATE PaymentTransaction\nSET status="SUCCESS", updatedAt=NOW()
+  API -> DB : UPDATE Fine\nSET status="PAID", paidAt=NOW()
+  API -> MQ : Publish "FinePaid" event\n(for notifications + audit)
+  API --> Pay : 200 OK
+else [Payment cancelled or declined]
+  Pay -> API : POST /api/payments/callback\n(externalPaymentId, status=CANCELLED/DECLINED)
+  API -> DB : SELECT PaymentTransaction\nBY externalPaymentId
+  DB --> API : PaymentTransaction
+  API -> DB : UPDATE PaymentTransaction\nSET status="CANCELLED" or "DECLINED"
+  API -> MQ : Publish "PaymentFailed" event
+  API --> Pay : 200 OK
+end
+
+== Reader returns to "My fines" ==
+
+Reader -> React : Return back to "My fines"
+React -> API : GET /api/fines
+API -> DB : SELECT active Fine\nfor current reader
+DB --> API : Updated list (paid fine is missing)
+API --> React : JSON list of active fines
+React -> Reader : Show message "Fine paid successfully"\n+ updated list
+
+@enduml

@@ -1,0 +1,6 @@
+# Evaluation dependencies (includes core requirements)
+-r requirements.txt
+
+sentence-transformers>=2.2.0
+pandas>=2.0.0
+numpy>=1.24.0

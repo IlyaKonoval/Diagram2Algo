@@ -1,0 +1,33 @@
+{
+  "timestamp": "20260205_020224",
+  "summary": {
+    "total_files": 11,
+    "evaluated_files": 11,
+    "total_gt_steps": 80,
+    "total_extracted": 42,
+    "avg_semantic_f1": 0.596095571095571,
+    "avg_sequence_score": 0.8977272727272727,
+    "avg_role_accuracy": 0.9090909090909091,
+    "avg_count_accuracy": 0.6000555000555,
+    "avg_composite_score": 0.749580142080142
+  },
+  "files": [
+    {
+      "filename": "3.png",
+      "metrics": {
+        "gt_count": 13,
+        "extracted_count": 3,
+        "semantic_precision": 1.0,
+        "semantic_recall": 0.23076923076923078,
+        "semantic_f1": 0.375,
+        "sequence_lcs": 1.0,
+        "sequence_edit_distance": 1.0,
+        "role_accuracy": 0.6666666666666666,
+        "step_count_accuracy": 0.23076923076923073,
+        "composite_score": 0.6064102564102565
+      },
+      "matched_pairs": [
+        {
+          "extracted_idx": 0,
+          "gt_idx": 0,
+          "similarity": 

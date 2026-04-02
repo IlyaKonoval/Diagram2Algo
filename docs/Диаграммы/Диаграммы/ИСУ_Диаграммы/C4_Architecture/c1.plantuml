@@ -1,0 +1,28 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+Person(student, "Студент", "Создает и отслеживает заявки")
+Person(student_office, "Студенческий офис", "Обрабатывает заявки")
+
+System(university_system, "Информационная система университета", "Система для управления студенческими заявками")
+
+System_Ext(keycloak, "Keycloak SSO", "Аутентификация пользователей (ITMO ID)")
+System_Ext(admission_system, "ИС приёмной комиссии", "Предоставляет данные о новых студентах")
+System_Ext(deans_office, "Деканаты", "Взаимодействие по учебным заявкам")
+System_Ext(rectors_office, "Ректорат", "Получение отчетов и статистики")
+System_Ext(first_dept, "Первый Отдел", "Обработка заявок на визы и выезд")
+System_Ext(mobilization_dept, "Мобилизационный отдел", "Обработка заявок на отсрочку")
+System_Ext(transport_system, "АСУ 'Городской транспорт'", "Актуализация права на льготные билеты")
+
+Rel(student, university_system, "Создает/просматривает заявки")
+Rel(student_office, university_system, "Обрабатывает заявки")
+
+Rel(university_system, keycloak, "Использует для аутентификации")
+Rel(admission_system, university_system, "Передает данные о пользователях")
+Rel(university_system, deans_office, "Отправляет/получает данные по заявкам")
+Rel(university_system, rectors_office, "Отправляет отчеты")
+Rel(university_system, first_dept, "Отправляет заявки")
+Rel(university_system, mobilization_dept, "Отправляет заявки")
+Rel(university_system, transport_system, "Отправляет данные о льготах")
+
+@enduml

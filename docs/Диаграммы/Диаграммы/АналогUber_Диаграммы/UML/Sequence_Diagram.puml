@@ -1,0 +1,88 @@
+@startuml
+autonumber
+
+actor Passenger
+participant "Mobile App" as App
+participant "Backend API" as API
+participant "TripService" as Trip
+participant "DriverLocationService" as DriverLoc
+participant "NotificationService" as Notify
+participant "Driver App" as Driver
+
+== Основной сценарий ==
+
+Passenger -> App : 1. Открывает приложение\nи хочет заказать такси
+App -> API : requestCurrentLocation()
+
+alt GPS доступен
+    API -> App : return location
+else GPS недоступен (2.a)
+    API -> App : error("GPS недоступен")
+    App -> Passenger : Попросить ввести адрес вручную
+    Passenger -> App : Вводит адрес
+end
+
+Passenger -> App : 3. Указывает пункт назначения
+App -> API : getTariffs(location, destination)
+API -> Trip : getAvailableTariffs()
+Trip --> API : tariffs
+API --> App : tariffs
+
+Passenger -> App : 5. Выбирает тариф\nи подтверждает заказ
+App -> API : createTripRequest()
+API -> DriverLoc : findNearbyDrivers()
+
+alt Водители есть
+    DriverLoc --> API : drivers[]
+else Водителей нет (4.a)
+    DriverLoc --> API : empty list
+    API -> App : notify("Водители не найдены")
+    App -> Passenger : предложить другой адрес
+    Passenger -> App : вводит другой адрес
+    App -> API : getTariffs(newAddress)
+    API -> Trip : getAvailableTariffs()
+    Trip --> API : tariffs
+    API --> App : tariffs
+end
+
+== Поиск и назначение водителя ==
+
+loop Пока не найден водитель\n(шаги 6–7)
+    API -> Driver : notifyNewTrip()
+
+    alt Водитель принимает заказ
+        Driver -> API : acceptTrip()
+        break
+    else Водитель отклоняет (7.a)
+        Driver -> API : rejectTrip()
+        API -> DriverLoc : findNextDriver()
+    end
+end
+
+API -> Trip : assignDriver()
+Trip --> API : assignedTrip
+API -> Notify : notifyPassenger(tripDetails)
+Notify -> Passenger : Push: "Заказ принят"
+API -> App : return trip details
+App -> Passenger : 8. Показать данные водителя и авто
+Driver -> Passenger : 9. Водитель едет к пассажиру
+
+== Альтернативы ==
+
+alt Водитель отменил заказ (9.a)
+    Driver -> API : cancelTrip()
+    API -> DriverLoc : findNewDriver()
+    API -> Passenger : push("Водитель отменил. Ищем нового.")
+end
+
+== Исключения ==
+
+alt E1: Неподдерживаемый регион
+    API -> App : error("Регион не поддерживается")
+end
+
+alt E2: Сервер не отвечает
+    App -> Passenger : "Сервер не отвечает. Попробуйте позже"
+end
+
+@enduml

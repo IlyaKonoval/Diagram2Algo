@@ -1,0 +1,45 @@
+@startuml
+title Диаграмма последовательностей: Отменить заказ
+
+actor "Клиент" as Client
+participant "Web/Mobile\n(SPA/Flutter)" as Frontend
+participant "Backend API" as Backend
+participant "Операционная программа\nресторана (внешн.)" as Restaurant
+participant "Платёжный провайдер (внешн.)" as Payment
+participant "Сервис\nуведомлений" as Notify
+
+Client -> Frontend : Открывает экран заказа
+Frontend -> Client : Нажимает «Отменить заказ»
+Frontend -> Backend : POST /orders/{id}/cancel\n(reason)
+
+Backend -> Restaurant : Проверить статус заказа\nи политику отмены
+
+alt [Отмена допустима]
+    Restaurant -> Backend : ok (можно отменить)
+    Backend -> Restaurant : Обновить статус заказа\nCANCELED
+    Restaurant -> Backend : статус обновлён
+
+    alt [Заказ оплачен онлайн]
+        Backend -> Payment : Инициировать возврат\n(REFUND)
+        Payment -> Backend : Результат возврата\n(succeeded/failed)
+
+        alt [Возврат успешен]
+            Backend -> Notify : Уведомление клиенту\n(заказ отменён,\nвозврат инициирован)
+            Backend -> Frontend : 200 OK,\nstatus=CANCELED,\nrefund=OK
+        else [Возврат не удался]
+            Backend -> Notify : Уведомление клиенту\n(заказ отменён,\nвозврат не выполнен)
+            Backend -> Frontend : 200 OK,\nstatus=CANCELED,\nrefund=FAILED
+        end
+
+    else [Оплата при получении]
+        Backend -> Notify : Уведомление клиенту\n(заказ отменён,\nоплата не списывалась)
+        Backend -> Frontend : 200 OK,\nstatus=CANCELED
+    end
+
+else [Отмена недопустима]
+    Restaurant -> Backend : отказ\n(уже на кухне/в доставке)
+    Backend -> Notify : Уведомление клиенту\n(отмена невозможна,\nобратитесь в поддержку)
+    Backend -> Frontend : 409 CONFLICT,\n"Отмена невозможна"
+end
+
+@enduml

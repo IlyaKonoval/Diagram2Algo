@@ -1,0 +1,76 @@
+@startuml
+
+top to bottom direction
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam dpi 140
+
+skinparam rectangle {
+  BackgroundColor #FFFFFF
+  BorderColor #222222
+}
+
+skinparam actor {
+  BorderColor #222222
+}
+
+skinparam database {
+  BorderColor #222222
+}
+
+' --- Actors (top) ---
+actor "Пользователь\n(читатель)" as Reader
+actor "Библиотекарь" as Librarian
+actor "Системный\nадминистратор" as SysAdmin
+
+' --- System boundary ---
+rectangle "ISBS — Информационная система\nбиблиотечного сервиса" as ISBS {
+
+  rectangle "Library Web App\n(React + Redux + TypeScript)" as WebApp
+  rectangle "Library Mobile App\n(Flutter)" as MobileApp
+  rectangle "Library Desktop App\n(Compose Multiplatform Desktop, Kotlin)" as DesktopApp
+
+  rectangle "Library API\n(Java + Spring REST)" as Api
+
+  database "Library DB\n(PostgreSQL)" as Db
+
+  rectangle "Cache\n(Redis)" as Redis
+  rectangle "Message Broker\n(RabbitMQ)" as Rabbit
+  rectangle "Logging & Monitoring\n(ELK stack)" as Elk
+}
+
+' --- External systems (outside boundary) ---
+rectangle "Платёжный сервис" as Payment
+rectangle "Почтовый/SMS-сервис" as Notify
+
+' --- User interactions ---
+Reader --> WebApp : Использует через\nбраузер (HTTPS)
+Reader --> MobileApp : Использует через\nмобильное приложение (HTTPS)
+Reader --> DesktopApp : Использует через\nдесктопное приложение (HTTPS)
+
+Librarian --> WebApp : Использует через\nбраузер (HTTPS)
+SysAdmin --> WebApp : Админский интерфейс\n(HTTPS)
+
+' --- Client -> API ---
+WebApp --> Api : REST API\n(авторизация, поиск,\nбронирование, штрафы)\nHTTPS/JSON
+MobileApp --> Api : HTTPS/REST\n(JSON)
+DesktopApp --> Api : HTTPS/REST\n(JSON)
+
+' --- Redirect/WebView to Payment (align with "перенаправлять пользователя") ---
+WebApp ..> Payment : Redirect/Hosted payment page\n(HTTPS)
+MobileApp ..> Payment : WebView/Redirect\n(HTTPS)
+DesktopApp ..> Payment : Redirect/External browser\n(HTTPS)
+
+' --- API -> internal infrastructure ---
+Api --> Db : JDBC/Hibernate\nчтение/запись данных
+Api --> Redis : Кэш\n(blacklist, rate-limit)\nRedis protocol
+Api --> Rabbit : AMQP\nуведомления, события
+Api --> Elk : Logstash/HTTP\nтехлоги/метрики
+
+' --- API -> external services ---
+Api --> Payment : HTTPS/REST\nсоздание платежей,\nзапрос статусов
+Payment ..> Api
+
+Api --> Notify : SMTP/HTTPS\nотправка e-mail/SMS
+
+@enduml

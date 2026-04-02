@@ -1,0 +1,32 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+Container(backend, "Бэкенд", "Oracle APEX (PL/SQL)") {
+    Component(api_controller, "API Controller", "PL/SQL Packages", "Принимает запросы от клиентов")
+    Component(auth_service, "Authentication Service", "PL/SQL Packages", "Управляет аутентификацией и авторизацией")
+    Component(app_service, "Application Service", "PL/SQL Packages", "Бизнес-логика управления заявками")
+    Component(user_service, "User Service", "PL/SQL Packages", "Управление данными пользователей")
+    Component(notification_service, "Notification Service", "PL/SQL Packages", "Отправка уведомлений")
+    Component(reporting_service, "Reporting Service", "PL/SQL Packages", "Генерация отчетов")
+    Component(integration_service, "External Integration Service", "PL/SQL Packages", "Интеграция с внешними системами")
+    Component(db_access, "Database Access Layer", "PL/SQL Packages", "Инкапсулирует доступ к БД")
+}
+
+System_Ext(keycloak, "Keycloak SSO")
+SystemDb_Ext(db, "Oracle DB")
+System_Ext(external_systems, "Внешние системы")
+
+Rel(api_controller, auth_service, "Использует для проверки прав")
+Rel(api_controller, app_service, "Вызывает для обработки заявок")
+Rel(api_controller, user_service, "Вызывает для работы с пользователями")
+
+Rel(auth_service, keycloak, "Взаимодействует с", "OAuth2/OIDC")
+Rel(app_service, user_service, "Получает данные о студенте")
+Rel(app_service, notification_service, "Использует для оповещений")
+Rel(app_service, db_access, "Использует для сохранения данных")
+
+Rel(reporting_service, db_access, "Читает данные для отчетов")
+Rel(integration_service, external_systems, "Взаимодействует с", "API")
+Rel(user_service, db_access, "Читает/пишет данные пользователей")
+
+@enduml

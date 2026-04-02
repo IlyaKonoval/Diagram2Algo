@@ -1,0 +1,26 @@
+@startuml
+' C4-PlantUML (C1: System Context)
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+LAYOUT_TOP_DOWN()
+
+Person(user, "Пользователь", "Читатель библиотеки")
+Person(librarian, "Библиотекарь", "Сотрудник библиотеки")
+Person(sysadmin, "Системный\nадминистратор", "Отвечает за эксплуатацию и\nнастройку системы")
+
+System_Boundary(s1, "Информационная система библиотечного сервиса\n[system]") {
+  System(isbs, "ISBS", "Library Service", "Управление каталогом,\nвыдачами, возвратами,\nштрафами и интеграциями")
+}
+
+System_Ext(payment, "Платёжный сервис", "External System", "Обработка оплат\nштрафов")
+System_Ext(notify, "Почтовый/SMS-сервис", "External System", "Отправка писем\nактивации и уведомлений\nпользователям")
+
+Rel(user, isbs, "Ищет материалы,\nбронирует,\nпродлевает,\nоплачивает штрафы")
+Rel(librarian, isbs, "Управляет каталогом,\nоформляет\nвыдачи/возвраты,\nконтролирует\nштрафы")
+Rel(sysadmin, isbs, "Настраивает доступы,\nфаерволы,\nрезервное\nкопирование")
+
+Rel(isbs, payment, "Инициирует оплату\nштрафов,\nполучает статусы\nплатежей", "HTTPS/REST, JSON")
+Rel(isbs, notify, "Отправляет письма\nактивации,\nнапоминания и\nуведомления", "SMTP/HTTPS")
+
+SHOW_LEGEND()
+@enduml

@@ -1,0 +1,124 @@
+@startuml
+title Диаграмма классов: логическая модель заказов
+top to bottom direction
+
+' ====== Classes ======
+class User {
+  UUID id
+  String phone
+  String email
+
+  placeOrder(cart, address, type)
+  cancelOrder(orderId)
+}
+
+class Order {
+  UUID id
+  OrderStatus status
+  String orderType  ' delivery | pickup
+  Money total
+  String deliveryAddress  ' при delivery
+  DateTime createdAt
+
+  applyPromo(code)
+  calculateTotal()
+  markPaid()
+  cancel(reason)
+}
+
+class OrderItem {
+  UUID id
+  int quantity
+  Money unitPrice
+
+  Money lineTotal()
+}
+
+class MenuItem {
+  UUID id
+  String name
+  String description
+  Money price
+  Boolean available
+
+  checkAvailability(qty)
+}
+
+class Payment {
+  UUID id
+  PaymentStatus status
+  String provider
+  String transactionId
+  Money amount
+
+  initiate()
+  confirm()
+  refund()
+}
+
+class Fulfillment {
+  UUID id
+  String fulfillmentType  ' delivery | pickup
+  FulfillmentStatus status
+  Duration eta
+
+  assignCourier(courier)
+  markInTransit()
+  markCompleted()
+}
+
+class Courier {
+  UUID id
+  String name
+  String phone
+
+  acceptTask(taskId)
+  updateStatus(status)
+  confirmDelivery(orderId)
+}
+
+' ====== Enums ======
+enum OrderStatus {
+  CREATED
+  PAID
+  IN_KITCHEN
+  READY
+  IN_TRANSIT
+  DELIVERED
+  PICKED_UP
+  CANCELED
+}
+
+enum PaymentStatus {
+  INITIATED
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+
+enum FulfillmentStatus {
+  PENDING
+  IN_PROGRESS
+  READY_FOR_PICKUP
+  IN_TRANSIT
+  COMPLETED
+  CANCELED
+}
+
+' ====== Relationships (multiplicities match the diagram) ======
+User "1" -down-> "0..*" Order : places
+
+Order "1" *-- "1..*" OrderItem : items
+OrderItem "*" -down-> "1" MenuItem : item
+
+Order "0..1" -left-> "1" Payment : paid via
+Order "0..1" -right-> "1" Fulfillment : fulfilled by
+
+Fulfillment "0..1" -down-> "1" Courier : assigned to
+
+' ====== Enum links (as on the diagram) ======
+Order -right-> OrderStatus
+Payment -down-> PaymentStatus
+Fulfillment -right-> FulfillmentStatus
+@enduml

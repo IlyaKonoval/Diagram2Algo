@@ -1,0 +1,60 @@
+@startuml
+title Диаграмма последовательностей: Оформить заказ (доставка + онлайн-оплата)
+
+actor "Клиент" as Client
+participant "Web/Mobile\n(SPA/Flutter)" as Frontend
+participant "Backend API" as Backend
+participant "Геокодирование\n(внешн.)" as Geo
+participant "Платёжный\nпровайдер" as Payment
+participant "Операционная программа\nресторана (внешн.)" as Restaurant
+participant "Сервис\nуведомлений" as Notify
+
+Client -> Frontend : формирует корзину
+
+Frontend -> Backend : GET /menu
+Backend -> Frontend : список позиций
+
+Frontend -> Backend : POST /cart {items}
+Backend -> Frontend : корзина с\nпромежуточной суммой
+
+Frontend -> Backend : POST /orders\n{type: delivery,\naddress, contact}
+
+Backend -> Geo : проверить адрес/зону
+
+alt [адрес вне зоны]
+    Geo -> Backend : вне зоны доставки
+    Backend -> Frontend : предложить самовывоз\nили изменить адрес
+else [адрес в зоне]
+    Geo -> Backend : координаты,\nзона OK
+    Backend -> Restaurant : создать черновик\nзаказа (orderId, сумма)
+end
+
+Backend -> Frontend : orderId, сумма
+
+Frontend -> Backend : проверить\nдоступность позиций
+Backend -> Restaurant : результат проверки
+Backend -> Frontend : подтверждённая\nитоговая сумма
+
+Frontend -> Backend : POST /payments/initiate\n{orderId, method: card}
+Backend -> Payment : создать платёж
+Payment -> Backend : pending (redirect/form)
+Backend -> Frontend : данные для\nподтверждения
+
+Client -> Payment : подтверждает платёж\n(3DS при необходимости)
+
+alt [платёж успешен]
+    Payment -> Backend : webhook payment.succeeded
+    Backend -> Restaurant : POST /orders/confirm\n{orderId}
+    Restaurant -> Backend : accepted + ticketId
+    Backend -> Notify : уведомление\nоб успешной оплате
+else [платёж отклонён/ошибка]
+    Payment -> Backend : webhook payment.failed
+    Backend -> Notify : уведомление\nоб ошибке оплаты
+end
+
+par [Обновление статусов]
+    Restaurant -> Backend : события статусов\n("на кухне", "готово",\n"в пути", "доставлено")
+    Backend -> Frontend : push/SSE\nобновления статуса
+end
+
+@enduml

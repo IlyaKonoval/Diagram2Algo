@@ -1,0 +1,29 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+Person(student, "Студент")
+Person(student_office, "Сотрудник студ. офиса")
+
+System_Boundary(c1, "Информационная система университета") {
+    Container(web_portal, "Веб-портал", "Oracle APEX", "Основной интерфейс для студентов и сотрудников")
+    Container(mobile_app, "Мобильное приложение", "React Native", "Портал для студентов")
+    Container(backend, "Бэкенд", "Oracle APEX (PL/SQL)", "Обработка бизнес-логики и API")
+    ContainerDb(db, "База данных", "Oracle Database", "Хранение данных о заявках, пользователях и т.д.")
+    Container(desktop_app, "Десктопное приложение", "WPF", "Импорт/экспорт отчетов, интеграция с гос. системами")
+}
+
+System_Ext(finance_system, "Система фин. учета", "1С", "Обработка финансовых данных")
+
+Rel(student, web_portal, "Использует", "HTTPS")
+Rel(student, mobile_app, "Использует", "HTTPS/JSON")
+
+Rel(student_office, web_portal, "Использует для обработки заявок", "HTTPS")
+Rel(student_office, desktop_app, "Использует для отчетов и интеграций")
+
+Rel(web_portal, backend, "Вызывает API", "HTTPS/JSON")
+Rel(mobile_app, backend, "Вызывает API", "HTTPS/JSON")
+Rel(desktop_app, backend, "Вызывает API", "HTTPS")
+
+Rel(backend, db, "Читает/пишет", "SQL")
+Rel(backend, finance_system, "Интегрируется с", "API")
+@enduml

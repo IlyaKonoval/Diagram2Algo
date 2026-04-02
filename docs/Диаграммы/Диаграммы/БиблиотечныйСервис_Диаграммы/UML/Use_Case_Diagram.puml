@@ -1,0 +1,196 @@
+@startuml
+left to right direction
+skinparam actorStyle awesome
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+
+actor "Неавторизованный пользователь" as Guest
+actor "Пользователь" as User
+actor "Библиотекарь" as Librarian
+actor "Система" as System
+actor "Платежный сервис" as PayService
+
+rectangle "Система библиотеки" {
+
+    usecase "Авторизация / Регистрация" as UC_Auth
+    usecase "Ввести данные\n(FIO, email, пароль)" as UC_AuthInput
+    usecase "Проверить корректность\nданных" as UC_AuthCheck
+    usecase "Проверить уникальность\nemail" as UC_AuthEmailCheck
+    usecase "Создать учетную запись" as UC_AuthCreate
+    usecase "Отправить письмо\nподтверждения" as UC_AuthMail
+    usecase "Активировать аккаунт" as UC_AuthActivate
+
+    UC_Auth --> UC_AuthInput : <<include>>
+    UC_Auth --> UC_AuthCheck : <<include>>
+    UC_Auth --> UC_AuthEmailCheck : <<include>>
+    UC_Auth --> UC_AuthCreate : <<include>>
+    UC_Auth --> UC_AuthMail : <<include>>
+    UC_Auth --> UC_AuthActivate : <<include>>
+
+    usecase "Пароли не совпадают" as UC_AuthPwdMismatch
+    UC_AuthCheck --> UC_AuthPwdMismatch : <<extend>>
+
+    usecase "Email уже зарегистрирован" as UC_AuthEmailExists
+    UC_AuthEmailCheck --> UC_AuthEmailExists : <<extend>>
+
+    usecase "Ошибка отправки email" as UC_AuthMailErr
+    UC_AuthMail --> UC_AuthMailErr : <<extend>>
+
+    usecase "Ошибка записи в БД" as UC_AuthDBErr
+    UC_AuthCreate --> UC_AuthDBErr : <<extend>>
+
+    Guest --> UC_Auth
+    System --> UC_Auth
+
+
+    usecase "Поиск материалов" as UC_Search
+    usecase "Ввести поисковый запрос" as UC_SearchQuery
+    usecase "Отобразить найденные\nматериалы" as UC_SearchResults
+    usecase "Применить фильтры" as UC_SearchFilters
+
+    UC_Search --> UC_SearchQuery : <<include>>
+    UC_Search --> UC_SearchResults : <<include>>
+    UC_Search --> UC_SearchFilters : <<include>>
+
+    usecase "Поиск без запроса\n(показать популярное)" as UC_SearchPopular
+    UC_SearchQuery --> UC_SearchPopular : <<extend>>
+
+    usecase "Совпадений не найдено" as UC_SearchNoResults
+    UC_SearchResults --> UC_SearchNoResults : <<extend>>
+
+    usecase "Некорректные фильтры" as UC_SearchBadFilters
+    UC_SearchFilters --> UC_SearchBadFilters : <<extend>>
+
+    usecase "Ошибка связи с БД" as UC_SearchDBErr
+    UC_Search --> UC_SearchDBErr : <<extend>>
+
+    usecase "Таймаут запроса" as UC_SearchTimeout
+    UC_Search --> UC_SearchTimeout : <<extend>>
+
+    User --> UC_Search
+    Guest --> UC_Search
+    System --> UC_Search
+
+
+    usecase "Оформление брони" as UC_Reserve
+    usecase "Проверить доступность\nэкземпляра" as UC_ReserveCheck
+    usecase "Создать запись бронирования" as UC_ReserveCreate
+    usecase "Уведомить библиотекаря" as UC_ReserveNotifyLib
+    usecase "Уведомить пользователя\nо бронировании" as UC_ReserveNotifyUser
+
+    UC_Reserve --> UC_ReserveCheck : <<include>>
+    UC_Reserve --> UC_ReserveCreate : <<include>>
+    UC_Reserve --> UC_ReserveNotifyLib : <<include>>
+    UC_Reserve --> UC_ReserveNotifyUser : <<include>>
+
+    usecase "Материал уже забронирован\n— предложить очередь" as UC_ReserveQueue
+    UC_ReserveCheck --> UC_ReserveQueue : <<extend>>
+
+    usecase "Превышен лимит бронирований" as UC_ReserveLimit
+    UC_ReserveCreate --> UC_ReserveLimit : <<extend>>
+
+    usecase "Пользователь отменяет бронь\nдо подтверждения" as UC_ReserveCancel
+    UC_Reserve --> UC_ReserveCancel : <<extend>>
+
+    usecase "Ошибка записи в БД" as UC_ReserveDBErr
+    UC_ReserveCreate --> UC_ReserveDBErr : <<extend>>
+
+    usecase "Потеря соединения с сервером" as UC_ReserveConnErr
+    UC_Reserve --> UC_ReserveConnErr : <<extend>>
+
+    User --> UC_Reserve
+    Librarian --> UC_Reserve
+    System --> UC_Reserve
+
+
+    usecase "Оформление выдачи" as UC_Lend
+    usecase "Проверить ограничения и\nдоступность экземпляра" as UC_LendCheck
+    usecase "Создать запись выдачи" as UC_LendCreate
+    usecase "Отправить уведомление\nпользователю" as UC_LendNotify
+
+    UC_Lend --> UC_LendCheck : <<include>>
+    UC_Lend --> UC_LendCreate : <<include>>
+    UC_Lend --> UC_LendNotify : <<include>>
+
+    usecase "Пользователь имеет\nпросрочки" as UC_LendOverdue
+    UC_LendCheck --> UC_LendOverdue : <<extend>>
+
+    usecase "Материал зарезервирован\nдругим" as UC_LendReserved
+    UC_LendCheck --> UC_LendReserved : <<extend>>
+
+    usecase "Продление вручную" as UC_LendExtend
+    UC_LendCreate --> UC_LendExtend : <<extend>>
+
+    usecase "Ошибка записи в БД" as UC_LendDBErr
+    UC_LendCreate --> UC_LendDBErr : <<extend>>
+
+    usecase "Ошибка синхронизации\nфилиала" as UC_LendSyncErr
+    UC_Lend --> UC_LendSyncErr : <<extend>>
+
+    Librarian --> UC_Lend
+    User --> UC_Lend
+    System --> UC_Lend
+
+
+    usecase "Возврат материала" as UC_Return
+    usecase "Проверить дату возврата" as UC_ReturnCheck
+    usecase "Начислить штраф" as UC_ReturnFine
+    usecase "Обновить статус\nматериала" as UC_ReturnUpdate
+    usecase "Уведомить пользователя" as UC_ReturnNotify
+
+    UC_Return --> UC_ReturnCheck : <<include>>
+    UC_Return --> UC_ReturnUpdate : <<include>>
+    UC_Return --> UC_ReturnNotify : <<include>>
+
+    UC_ReturnCheck --> UC_ReturnFine : <<extend>>
+
+    usecase "Материал повреждён" as UC_ReturnDamaged
+    UC_Return --> UC_ReturnDamaged : <<extend>>
+
+    usecase "Возврат досрочно" as UC_ReturnEarly
+    UC_Return --> UC_ReturnEarly : <<extend>>
+
+    usecase "Малая просрочка — штраф\nотменён вручную" as UC_ReturnCancelFine
+    UC_ReturnFine --> UC_ReturnCancelFine : <<extend>>
+
+    usecase "Ошибка обновления\nстатуса" as UC_ReturnUpdateErr
+    UC_ReturnUpdate --> UC_ReturnUpdateErr : <<extend>>
+
+    usecase "Ошибка расчёта штрафа" as UC_ReturnFineErr
+    UC_ReturnFine --> UC_ReturnFineErr : <<extend>>
+
+    User --> UC_Return
+    Librarian --> UC_Return
+    System --> UC_Return
+
+
+    usecase "Погашение штрафа" as UC_Fine
+    usecase "Перейти в платёжный\nсервис" as UC_FineRedirect
+    usecase "Обновить статус штрафа" as UC_FineUpdate
+    usecase "Уведомить пользователя\nоб оплате" as UC_FineNotify
+
+    UC_Fine --> UC_FineRedirect : <<include>>
+    UC_Fine --> UC_FineUpdate : <<include>>
+    UC_Fine --> UC_FineNotify : <<include>>
+
+    usecase "Пользователь отменяет оплату" as UC_FineCancel
+    UC_FineRedirect --> UC_FineCancel : <<extend>>
+
+    usecase "Платёж отклонён банком" as UC_FineRejected
+    UC_FineRedirect --> UC_FineRejected : <<extend>>
+
+    usecase "Задержка подтверждения" as UC_FineDelayed
+    UC_FineUpdate --> UC_FineDelayed : <<extend>>
+
+    usecase "Ошибка соединения с\nплатежным сервисом" as UC_FineConnErr
+    UC_FineRedirect --> UC_FineConnErr : <<extend>>
+
+    usecase "Ошибка записи транзакции" as UC_FineDBErr
+    UC_FineUpdate --> UC_FineDBErr : <<extend>>
+
+    User --> UC_Fine
+    System --> UC_Fine
+    PayService --> UC_FineRedirect
+}
+@enduml
+
