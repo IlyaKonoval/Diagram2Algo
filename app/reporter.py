@@ -1,14 +1,13 @@
 import csv
 import json
+from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from dataclasses import dataclass, field
-from typing import Optional
 
-from rich.console import Console
-from rich.table import Table
-from rich.panel import Panel
 from rich import box
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
 
 from app.config import EVAL_OUTPUT_DIR
 from app.metrics import MetricsResult

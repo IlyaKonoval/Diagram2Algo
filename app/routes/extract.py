@@ -3,8 +3,8 @@ import logging
 import tempfile
 from pathlib import Path
 
-from fastapi import APIRouter, File, HTTPException, UploadFile, Query
-from fastapi.responses import PlainTextResponse, HTMLResponse
+from fastapi import APIRouter, File, HTTPException, Query, UploadFile
+from fastapi.responses import HTMLResponse, PlainTextResponse
 from PIL import Image
 
 from app.config import LLMProvider, settings
@@ -16,8 +16,10 @@ from app.pipeline import process_path
 from app.postprocessing import parse_llm_response
 from app.preprocessing import preprocess_image
 from app.prompts import (
-    IMAGE_PROMPT, IMAGE_PROMPT_NO_OCR,
-    IMAGE_PROMPT_EN, IMAGE_PROMPT_EN_NO_OCR,
+    IMAGE_PROMPT,
+    IMAGE_PROMPT_EN,
+    IMAGE_PROMPT_EN_NO_OCR,
+    IMAGE_PROMPT_NO_OCR,
 )
 
 logger = logging.getLogger(__name__)

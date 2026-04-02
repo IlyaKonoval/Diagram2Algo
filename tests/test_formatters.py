@@ -1,4 +1,5 @@
 import pytest
+
 from app.formatters import format_result_html, format_result_text
 from app.models import DiagramStep, ExtractionResult
 

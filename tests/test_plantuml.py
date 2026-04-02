@@ -1,10 +1,9 @@
-import pytest
 from app.models import DiagramStep
 from app.plantuml import (
+    _plantuml_encode,
     _safe_alias,
     generate_activity_diagram,
     generate_sequence_diagram,
-    _plantuml_encode,
 )
 
 

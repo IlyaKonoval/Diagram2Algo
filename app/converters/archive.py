@@ -1,6 +1,5 @@
 import hashlib
 import logging
-import shutil
 import tempfile
 import zipfile
 from pathlib import Path

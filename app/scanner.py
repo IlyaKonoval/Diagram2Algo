@@ -3,8 +3,8 @@ from pathlib import Path
 from typing import Generator, Optional, Union
 
 from app.converters.archive import compute_file_hash, extract_archive
-from app.models import FileInput, FileType
 from app.file_detector import get_file_type
+from app.models import FileInput, FileType
 
 logger = logging.getLogger(__name__)
 

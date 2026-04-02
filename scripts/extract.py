@@ -1,17 +1,15 @@
 import sys
 from pathlib import Path
 
+from PIL import Image
+from rich import box
 from rich.console import Console
 from rich.panel import Panel
-from rich.table import Table
-from rich import box
 
 from app.config import TEST_DIR
 from app.llm import warmup
 from app.pipeline import process_image
 from app.preprocessing import preprocess_image
-from PIL import Image
-
 
 console = Console()
 

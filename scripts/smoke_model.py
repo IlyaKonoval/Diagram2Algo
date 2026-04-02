@@ -1,14 +1,13 @@
 import sys
 import time
-from pathlib import Path
 
 from PIL import Image
 
-from app.config import settings, DOCS_DIR
+from app.config import DOCS_DIR
 from app.llm import get_provider, warmup
+from app.postprocessing import parse_llm_response
 from app.preprocessing import preprocess_image
 from app.prompts import IMAGE_PROMPT_EN
-from app.postprocessing import parse_llm_response
 
 
 def main():

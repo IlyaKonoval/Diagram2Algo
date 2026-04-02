@@ -1,6 +1,4 @@
-import os
-import pytest
-from app.config import Settings, LLMProvider
+from app.config import LLMProvider, Settings
 
 
 class TestSettings:

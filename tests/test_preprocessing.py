@@ -1,11 +1,12 @@
 import pytest
 from PIL import Image
+
 from app.preprocessing import (
-    resize_image,
+    convert_to_rgb,
     enhance_contrast,
     is_dark_background,
-    convert_to_rgb,
     preprocess_image,
+    resize_image,
 )
 
 

@@ -1,12 +1,11 @@
-import pytest
+from app.models import DiagramStep
 from app.postprocessing import (
     extract_json_from_text,
     parse_json_response,
-    parse_simple_format,
     parse_llm_response,
+    parse_simple_format,
     validate_steps,
 )
-from app.models import DiagramStep
 
 
 class TestExtractJsonFromText:

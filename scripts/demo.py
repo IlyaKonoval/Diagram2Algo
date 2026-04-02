@@ -1,9 +1,9 @@
-import json
 import sys
 from pathlib import Path
 
 from app.llm import warmup
 from app.pipeline import process_path
+
 
 def demo_single_image(image_path: str):
     print(f"\n{'='*60}")

@@ -1,14 +1,13 @@
 import json
 import logging
-import sys
 from pathlib import Path
 
 import click
 from tqdm import tqdm
 
+from app.llm import warmup
 from app.models import BatchResult
 from app.pipeline import process_path
-from app.llm import warmup
 
 logging.basicConfig(
     level=logging.INFO,

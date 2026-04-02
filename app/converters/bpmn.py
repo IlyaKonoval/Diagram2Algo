@@ -28,8 +28,6 @@ def parse_bpmn(source: Union[str, Path, bytes]) -> Optional[str]:
         logger.error(f"Failed to parse BPMN XML: {e}")
         return None
 
-    ns = _detect_namespace(root)
-
     participants = []
     events = []
     tasks = []

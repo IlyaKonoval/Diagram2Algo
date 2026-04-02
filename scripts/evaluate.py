@@ -6,10 +6,9 @@ from pathlib import Path
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
-from app.config import TEST_DIR, GT_FILE, EVAL_OUTPUT_DIR
+from app.config import EVAL_OUTPUT_DIR, GT_FILE, TEST_DIR
 from app.metrics import calculate_metrics, warmup_metrics
-from app.reporter import Reporter, FileMetrics, EvalReport
-
+from app.reporter import EvalReport, FileMetrics, Reporter
 
 console = Console()
 

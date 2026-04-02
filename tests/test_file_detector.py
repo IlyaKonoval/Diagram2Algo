@@ -1,7 +1,4 @@
-import tempfile
-from pathlib import Path
 
-import pytest
 
 from app.file_detector import get_file_type, get_supported_extensions, is_supported
 from app.models import FileType

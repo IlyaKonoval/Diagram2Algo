@@ -4,7 +4,7 @@ from typing import Optional, Union
 
 from PIL import Image
 
-from app.config import settings
+from app.config import LLMProvider, settings
 from app.converters import (
     extract_archive,
     parse_bpmn,
@@ -12,17 +12,22 @@ from app.converters import (
     render_pdf_pages,
     render_svg,
 )
+from app.file_detector import get_file_type
 from app.llm import image_inference, text_inference
 from app.models import ExtractionResult, FileInput, FileType
 from app.ocr import extract_text, is_tesseract_available
 from app.postprocessing import parse_llm_response, validate_steps
 from app.preprocessing import load_and_preprocess, preprocess_image, preprocess_rendered
-from app.config import LLMProvider
 from app.prompts import (
-    IMAGE_PROMPT, IMAGE_PROMPT_NO_OCR, SIMPLE_IMAGE_PROMPT, SIMPLE_TEXT_PROMPT, TEXT_PROMPT,
-    IMAGE_PROMPT_EN, IMAGE_PROMPT_EN_NO_OCR, TEXT_PROMPT_EN,
+    IMAGE_PROMPT,
+    IMAGE_PROMPT_EN,
+    IMAGE_PROMPT_EN_NO_OCR,
+    IMAGE_PROMPT_NO_OCR,
+    SIMPLE_IMAGE_PROMPT,
+    SIMPLE_TEXT_PROMPT,
+    TEXT_PROMPT,
+    TEXT_PROMPT_EN,
 )
-from app.file_detector import get_file_type
 from app.scanner import scan_directory
 
 logger = logging.getLogger(__name__)
