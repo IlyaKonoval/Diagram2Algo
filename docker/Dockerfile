@@ -16,14 +16,14 @@ ENV PYTHONDONTWRITEBYTECODE=1
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libcairo2 \
     libpango-1.0-0 \
-    libgdk-pixbuf2.0-0 \
+    libgdk-pixbuf-2.0-0 \
     shared-mime-info \
     tesseract-ocr \
     tesseract-ocr-rus \
     tesseract-ocr-eng \
-    openjdk-17-jre-headless \
+    openjdk-21-jre-headless \
     wget curl \
-    unrar p7zip-full \
+    unrar-free p7zip-full \
     && rm -rf /var/lib/apt/lists/*
 
 # PlantUML
